@@ -711,13 +711,30 @@
       <h2>Backup dos dados</h2>
       <button class="sheet-close" data-close="sheet-data">${'{ICON_X}'}</button>
     </div>
-    <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin:0 0 18px 0;">Seus dados ficam salvos só neste navegador/endereço. Para levá-los a outro lugar (ex: depois de hospedar em outro site), exporte um backup aqui e importe no novo local.</p>
-    <button class="btn btn-primary btn-block" id="data-export">${'{ICON_BACKUP}'} Exportar backup (.json)</button>
+    <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin:0 0 18px 0;">Seus dados ficam salvos só neste navegador/endereço. Para levá-los a outro lugar, use uma das opções abaixo.</p>
+
+    <button class="btn btn-primary btn-block" id="data-export">${'{ICON_BACKUP}'} Exportar arquivo (.json)</button>
     <div style="height:10px;"></div>
     <label class="btn btn-ghost btn-block" style="cursor:pointer;" id="data-import-label">
-      Importar backup (.json)
+      Importar arquivo (.json)
       <input type="file" id="data-import-input" accept="application/json" style="display:none;">
     </label>
+
+    <div class="divider"></div>
+    <div class="section-title" style="margin-top:0;"><span>Ou copiar/colar como texto</span></div>
+    <p style="font-size:12px;color:var(--text-faint);margin:0 0 8px 0;">Se o botão acima não baixar nada, toque no campo abaixo, selecione tudo e copie manualmente.</p>
+    <div class="field">
+      <label>Seus dados (para copiar)</label>
+      <textarea id="data-export-text" readonly onclick="this.select()" style="width:100%;height:110px;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:10px;color:var(--text);font-family:var(--font-mono);font-size:10.5px;resize:vertical;"></textarea>
+    </div>
+    <button class="btn btn-ghost btn-block" id="data-copy-text">Copiar texto</button>
+
+    <div class="divider"></div>
+    <div class="field">
+      <label>Colar backup aqui para importar</label>
+      <textarea id="data-import-text" placeholder="Cole o texto do backup..." style="width:100%;height:110px;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:10px;color:var(--text);font-family:var(--font-mono);font-size:10.5px;resize:vertical;"></textarea>
+    </div>
+    <button class="btn btn-ghost btn-block" id="data-import-text-btn">Importar deste texto</button>
   </div>
 </div>
 
@@ -1028,18 +1045,84 @@
   }
 
   // ---------- Backup (exportar / importar) ----------
-  document.getElementById('open-data').addEventListener('click', ()=> openSheet('sheet-data'));
+  document.getElementById('open-data').addEventListener('click', ()=>{
+    document.getElementById('data-export-text').value = JSON.stringify(state, null, 2);
+    document.getElementById('data-import-text').value = '';
+    openSheet('sheet-data');
+  });
 
-  document.getElementById('data-export').addEventListener('click', ()=>{
-    const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'backup-controle-' + new Date().toISOString().slice(0,10) + '.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  document.getElementById('data-export').addEventListener('click', async ()=>{
+    const dataStr = JSON.stringify(state, null, 2);
+    const filename = 'backup-controle-' + new Date().toISOString().slice(0,10) + '.json';
+    const blob = new Blob([dataStr], {type:'application/json'});
+
+    // 1) Tenta o menu de compartilhar do próprio Android/iOS (mais confiável no celular)
+    try{
+      const file = new File([blob], filename, {type:'application/json'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({files:[file], title:filename});
+        return;
+      }
+    }catch(e){ /* usuário cancelou ou não suportado — tenta o próximo método */ }
+
+    // 2) Download normal via link
+    try{
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url), 2000);
+      return;
+    }catch(e){ /* segue para o texto abaixo, que sempre funciona */ }
+  });
+
+  document.getElementById('data-copy-text').addEventListener('click', async ()=>{
+    const ta = document.getElementById('data-export-text');
+    ta.value = JSON.stringify(state, null, 2);
+    try{
+      await navigator.clipboard.writeText(ta.value);
+      showActionSheet({ title:'Copiado!', message:'O backup foi copiado para a área de transferência. Agora é só colar onde quiser (WhatsApp, Notas, etc).', actions:[{label:'OK', style:'btn-ghost'}] });
+    }catch(e){
+      ta.focus(); ta.select();
+      try{ document.execCommand('copy'); showActionSheet({ title:'Copiado!', message:'O backup foi copiado.', actions:[{label:'OK', style:'btn-ghost'}] }); }
+      catch(e2){ showActionSheet({ title:'Copie manualmente', message:'Toque no campo de texto acima, selecione tudo e copie com o dedo.', actions:[{label:'OK', style:'btn-ghost'}] }); }
+    }
+  });
+
+  function applyImportedBackup(parsed){
+    showActionSheet({
+      title:'Importar backup',
+      message:'Isso vai substituir todos os dados atuais (dívidas e escala) pelos dados importados. Deseja continuar?',
+      actions:[
+        {label:'Importar e substituir', style:'btn-danger-ghost', onClick:()=>{
+          state.debts = Array.isArray(parsed.debts) ? parsed.debts : [];
+          state.shifts = Array.isArray(parsed.shifts) ? parsed.shifts : [];
+          if(parsed.scheduleConfig){
+            state.scheduleConfig.hmsm = Object.assign({}, state.scheduleConfig.hmsm, parsed.scheduleConfig.hmsm||{});
+            state.scheduleConfig.hmmv = Object.assign({}, state.scheduleConfig.hmmv, parsed.scheduleConfig.hmmv||{});
+          }
+          migrateConfig();
+          renderAll();
+          closeSheet('sheet-data');
+        }},
+        {label:'Cancelar', style:'btn-ghost'}
+      ]
+    });
+  }
+
+  document.getElementById('data-import-text-btn').addEventListener('click', ()=>{
+    const raw = document.getElementById('data-import-text').value.trim();
+    if(!raw) return;
+    let parsed;
+    try{ parsed = JSON.parse(raw); }
+    catch(err){
+      showActionSheet({ title:'Texto inválido', message:'Não consegui ler esse texto como backup. Confira se colou tudo, sem cortar o início ou o fim.', actions:[{label:'OK', style:'btn-ghost'}] });
+      return;
+    }
+    applyImportedBackup(parsed);
   });
 
   document.getElementById('data-import-input').addEventListener('change', (e)=>{
@@ -1053,24 +1136,7 @@
         showActionSheet({ title:'Arquivo inválido', message:'Não foi possível ler esse arquivo de backup.', actions:[{label:'OK', style:'btn-ghost'}] });
         return;
       }
-      showActionSheet({
-        title:'Importar backup',
-        message:'Isso vai substituir todos os dados atuais (dívidas e escala) pelos dados do arquivo importado. Deseja continuar?',
-        actions:[
-          {label:'Importar e substituir', style:'btn-danger-ghost', onClick:()=>{
-            state.debts = Array.isArray(parsed.debts) ? parsed.debts : [];
-            state.shifts = Array.isArray(parsed.shifts) ? parsed.shifts : [];
-            if(parsed.scheduleConfig){
-              state.scheduleConfig.hmsm = Object.assign({}, state.scheduleConfig.hmsm, parsed.scheduleConfig.hmsm||{});
-              state.scheduleConfig.hmmv = Object.assign({}, state.scheduleConfig.hmmv, parsed.scheduleConfig.hmmv||{});
-            }
-            migrateConfig();
-            renderAll();
-            closeSheet('sheet-data');
-          }},
-          {label:'Cancelar', style:'btn-ghost'}
-        ]
-      });
+      applyImportedBackup(parsed);
     };
     reader.readAsText(file);
     e.target.value = '';
