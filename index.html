@@ -834,6 +834,7 @@
     ICON_CALENDAR:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>',
     ICON_X:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
     ICON_TRASH:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-.8 13.2A2 2 0 0 1 16.2 21H7.8a2 2 0 0 1-2-1.8L5 6"/></svg>',
+    ICON_EDIT:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
     ICON_CHECK:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
     ICON_WAND:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2M15 10v-2M10.5 6.5h-2M18.5 6.5h2M5 21l9-9M17.5 3.5l3 3M3 17l1.5 1.5"/></svg>',
     ICON_PRINT:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M6 14h12v7H6z"/></svg>',
@@ -977,9 +978,16 @@
           + '<div class="debt-meta">'+dueChip+parcela+'</div>'
         + '</div>'
         + (d.valor ? '<div class="debt-value">'+money(d.valor)+'</div>' : '')
-        + '<button class="icon-btn" data-del="'+d.id+'">'+ICONS.ICON_TRASH+'</button>'
+        + '<div style="display:flex;flex-direction:column;gap:2px;">'
+          + '<button class="icon-btn" data-edit="'+d.id+'">'+ICONS.ICON_EDIT+'</button>'
+          + '<button class="icon-btn" data-del="'+d.id+'">'+ICONS.ICON_TRASH+'</button>'
+        + '</div>'
       + '</div>';
     }).join('');
+
+    list.querySelectorAll('[data-edit]').forEach(el=>{
+      el.addEventListener('click', ()=> openEditDebt(el.dataset.edit));
+    });
 
     list.querySelectorAll('[data-toggle]').forEach(el=>{
       el.addEventListener('click', ()=>{
@@ -1142,11 +1150,15 @@
     e.target.value = '';
   });
 
-  // Add debt sheet
+  // Add / edit debt sheet
   const fRecurring = document.getElementById('f-recurring');
   const recurringHint = document.getElementById('recurring-hint');
   const fParcelasInput = document.getElementById('f-parcelas');
+  const parcelasField = fParcelasInput.closest('.field');
+  const recurringRow = fRecurring.closest('.checkbox-row');
   let fRecurringState = false;
+  let editingDebtId = null;
+
   fRecurring.addEventListener('click', ()=>{
     fRecurringState = !fRecurringState;
     fRecurring.classList.toggle('checked', fRecurringState);
@@ -1157,7 +1169,9 @@
   });
 
   document.getElementById('fab-add-debt').addEventListener('click', ()=>{
+    editingDebtId = null;
     document.getElementById('debt-sheet-title').textContent = 'Nova dívida';
+    document.getElementById('f-save').textContent = 'Salvar dívida';
     document.getElementById('f-desc').value='';
     document.getElementById('f-venc').value = debtMonth.ano+'-'+pad(debtMonth.mes)+'-01';
     document.getElementById('f-valor').value='';
@@ -1166,8 +1180,29 @@
     fRecurringState = false;
     fRecurring.classList.remove('checked'); fRecurring.innerHTML='';
     recurringHint.style.display = 'none';
+    parcelasField.style.display = '';
+    recurringRow.style.display = '';
     openSheet('sheet-debt');
   });
+
+  function openEditDebt(id){
+    const d = state.debts.find(x=>x.id===id);
+    if(!d) return;
+    editingDebtId = id;
+    document.getElementById('debt-sheet-title').textContent = 'Editar dívida';
+    document.getElementById('f-save').textContent = 'Salvar alterações';
+    document.getElementById('f-desc').value = d.desc;
+    document.getElementById('f-venc').value = d.ano+'-'+pad(d.mes)+'-'+pad(d.dia);
+    document.getElementById('f-valor').value = d.valor || '';
+    document.getElementById('f-parcelas').value = '';
+    fRecurringState = false;
+    fRecurring.classList.remove('checked'); fRecurring.innerHTML='';
+    recurringHint.style.display = 'none';
+    // Parcelas/recorrência não fazem sentido ao editar um lançamento já existente
+    parcelasField.style.display = 'none';
+    recurringRow.style.display = 'none';
+    openSheet('sheet-debt');
+  }
 
   const RECURRING_HORIZON_MONTHS = 60; // 5 anos
 
@@ -1176,7 +1211,39 @@
     const venc = document.getElementById('f-venc').value;
     if(!desc || !venc){ document.getElementById('f-desc').focus(); return; }
     const [ano,mes,dia] = venc.split('-').map(Number);
-    const valor = document.getElementById('f-valor').value;
+    const valorRaw = document.getElementById('f-valor').value;
+    const novoValor = valorRaw ? Number(valorRaw) : null;
+
+    if(editingDebtId){
+      const d = state.debts.find(x=>x.id===editingDebtId);
+      if(!d){ closeSheet('sheet-debt'); return; }
+      const valorMudou = novoValor !== d.valor;
+      const siblings = d.groupId ? state.debts.filter(x=>x.groupId===d.groupId && x.id!==d.id && (x.mes>d.mes || x.ano>d.ano) ) : [];
+      const applyChanges = (updateFuture)=>{
+        d.desc = desc; d.ano = ano; d.mes = mes; d.dia = dia; d.valor = novoValor;
+        if(updateFuture){
+          siblings.forEach(s=>{ s.desc = desc; s.valor = novoValor; });
+        }
+        saveData();
+        debtMonth = {ano, mes};
+        renderDebts();
+        closeSheet('sheet-debt');
+      };
+      if(valorMudou && siblings.length>0){
+        showActionSheet({
+          title:'Atualizar parcelas futuras?',
+          message:'Essa conta faz parte de uma série. Deseja aplicar a descrição/valor também às '+siblings.length+' ocorrências futuras (ex: reajuste de aluguel)?',
+          actions:[
+            {label:'Só esta', style:'btn-ghost', onClick:()=>applyChanges(false)},
+            {label:'Esta e as futuras ('+siblings.length+')', style:'btn-primary', onClick:()=>applyChanges(true)},
+          ]
+        });
+      } else {
+        applyChanges(false);
+      }
+      return;
+    }
+
     const groupId = genId();
 
     if(fRecurringState){
@@ -1187,7 +1254,7 @@
         const diaClamp = Math.min(dia, daysInMonth(y, m));
         state.debts.push({
           id: genId(), groupId, desc, ano:y, mes:m, dia:diaClamp,
-          valor: valor? Number(valor): null,
+          valor: novoValor,
           parcAtual: null, parcTotal: null,
           recurring: true,
           pago: false
@@ -1203,7 +1270,7 @@
         const diaClamp = Math.min(dia, daysInMonth(y, m));
         state.debts.push({
           id: genId(), groupId, desc, ano:y, mes:m, dia:diaClamp,
-          valor: valor? Number(valor): null,
+          valor: novoValor,
           parcAtual: totalParcelas ? i+1 : null,
           parcTotal: totalParcelas,
           pago: false
