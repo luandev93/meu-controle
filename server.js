@@ -7,12 +7,12 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '1mb' }));
 
-async function sendApp(req, res) {
+async function sendApp(_req, res) {
   try {
     const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
     const injected = html.replace(
       '</head>',
-      '<script src="/api-sync.js"></script></head>'
+      '<script src="/api-sync.js"></script><script src="/watermark.js"></script></head>'
     );
     res.type('html').send(injected);
   } catch {
