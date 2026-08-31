@@ -4,13 +4,42 @@ const connection = process.env.DATABASE_URL;
 
 export const database = connection ? neon(connection) : null;
 
-export async function readState() {
+let schemaReady;
+
+async function ensureSchema() {
   if (!database) throw new Error('DATABASE_URL not configured');
-  const rows = await database('select data from app_state where id = $1', [1]);
-  return rows[0]?.data ?? { debts: [], shifts: [], scheduleConfig: {} };
+  if (!schemaReady) {
+    schemaReady = database(`
+      create table if not exists public.app_state (
+        id integer primary key,
+        data jsonb not null default '{}'::jsonb,
+        updated_at timestamptz not null default now()
+      )
+    `).catch(error => {
+      schemaReady = null;
+      throw error;
+    });
+  }
+  await schemaReady;
+}
+
+export async function readState() {
+  await ensureSchema();
+  const rows = await database('select data from public.app_state where id = $1', [1]);
+  return rows[0]?.data ?? {
+    debts: [],
+    shifts: [],
+    scheduleConfig: {
+      hmsm: { enabled: true, anchor: '', intervalValue: 3, unit: 'dias' },
+      hmmv: { enabled: true, weekdays: [2, 4, 6], firstSunday: true }
+    }
+  };
 }
 
 export async function writeState(data) {
-  if (!database) throw new Error('DATABASE_URL not configured');
-  await database('insert into app_state (id, data, updated_at) values ($1, $2::jsonb, now()) on conflict (id) do update set data = excluded.data, updated_at = now()', [1, JSON.stringify(data)]);
+  await ensureSchema();
+  await database(
+    'insert into public.app_state (id, data, updated_at) values ($1, $2::jsonb, now()) on conflict (id) do update set data = excluded.data, updated_at = now()',
+    [1, JSON.stringify(data)]
+  );
 }
