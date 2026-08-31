@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071525">
+<title>Meu Controle</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}body{display:grid;place-items:center;background:#071525;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.splash{position:relative;width:100%;height:100%;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%,#12365d 0,#071525 42%,#030a12 100%)}
+.splash:before,.splash:after{content:"";position:absolute;inset:0;pointer-events:none}.splash:before{background:repeating-radial-gradient(circle at center,transparent 0 72px,rgba(48,181,255,.07) 73px 74px,transparent 75px 118px);animation:pulse 2.8s ease-in-out infinite}.splash:after{background:linear-gradient(115deg,transparent 30%,rgba(74,190,255,.12) 50%,transparent 70%);transform:translateX(-120%);animation:sweep 1.8s ease-in-out .25s infinite}
+.logo-wrap{position:relative;width:min(72vw,300px);aspect-ratio:1;border-radius:28%;display:grid;place-items:center;animation:enter .9s cubic-bezier(.2,.8,.2,1) both;filter:drop-shadow(0 0 26px rgba(38,177,255,.28))}.logo-wrap:before{content:"";position:absolute;inset:-9px;border-radius:30%;border:2px solid rgba(50,190,255,.8);box-shadow:0 0 14px #159fe8,0 0 44px rgba(21,159,232,.45);animation:ring 2s ease-out .7s infinite}.logo{width:100%;height:100%;object-fit:cover;border-radius:28%}
+.brand{position:absolute;bottom:11%;left:0;right:0;text-align:center;font-weight:800;font-size:clamp(18px,5vw,28px);letter-spacing:.05em;animation:brand .7s ease .55s both}.brand span{color:#27b9f5}.loading{position:absolute;bottom:6.5%;width:min(48vw,190px);height:3px;background:rgba(255,255,255,.16);border-radius:99px;overflow:hidden}.loading i{display:block;width:38%;height:100%;background:#28b9f5;box-shadow:0 0 12px #28b9f5;animation:load 1.25s ease-in-out infinite}
+@keyframes enter{from{opacity:0;transform:scale(.58) rotate(-8deg);filter:blur(8px) drop-shadow(0 0 0 transparent)}to{opacity:1;transform:scale(1) rotate(0);filter:blur(0) drop-shadow(0 0 26px rgba(38,177,255,.28))}}@keyframes ring{0%{transform:scale(.82);opacity:.9}70%,100%{transform:scale(1.13);opacity:0}}@keyframes pulse{50%{transform:scale(1.08);opacity:.55}}@keyframes sweep{0%{transform:translateX(-120%)}45%,100%{transform:translateX(120%)}}@keyframes brand{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes load{0%{transform:translateX(-120%)}100%{transform:translateX(310%)}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body>
+<main class="splash" aria-label="Abrindo Meu Controle">
+  <div class="logo-wrap"><img class="logo" src="icon-512.png" alt="Meu Controle"></div>
+  <div class="brand">MEU <span>CONTROLE</span></div>
+  <div class="loading" aria-hidden="true"><i></i></div>
+</main>
+<script>
+setTimeout(function(){location.replace('./index.html')},1800);
+</script>
+</body>
+</html>
