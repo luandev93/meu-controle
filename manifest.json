@@ -1,11 +1,11 @@
 {
-  "name": "Controle Pessoal — Dívidas & Escala",
-  "short_name": "Controle",
-  "start_url": "./index.html",
+  "name": "Meu Controle — Dívidas & Escala",
+  "short_name": "Meu Controle",
+  "start_url": "./launch.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0F1417",
-  "theme_color": "#0F1417",
+  "background_color": "#071525",
+  "theme_color": "#071525",
   "orientation": "portrait",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
