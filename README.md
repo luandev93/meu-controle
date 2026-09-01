@@ -1,37 +1,103 @@
-# Controle Pessoal — Dívidas & Escala
+# meu-controle
 
-Pacote pronto para publicar de graça. Contém:
-- `index.html` — o app
-- `manifest.json` + `icon-192.png` + `icon-512.png` — permitem "Adicionar à tela de início" como app de verdade
-- `sw.js` — deixa o app funcionando offline depois do primeiro acesso
+App pessoal para controlar **dívidas/contas** e **escala de trabalho** (HMSM · Noite e HMMV · Dia), com preenchimento automático de escala e persistência real na nuvem.
 
-**Importante:** os dados (dívidas e escala) ficam salvos no navegador do seu celular (`localStorage`), não em um banco de dados na nuvem. Ou seja: funcionam sempre que você acessar pelo mesmo navegador/aparelho, mas não sincronizam entre celular e computador, por exemplo. Isso é normal para hospedagem 100% estática e gratuita — só a *página* fica na nuvem, os dados ficam com você.
+**App oficial (use este link):**
+👉 https://meu-controle-api.onrender.com/
 
 ---
 
-## Opção 1 — GitHub Pages (recomendado, gratuito para sempre)
+## Arquitetura
 
-1. Crie uma conta em github.com (se não tiver).
-2. Crie um repositório novo (pode ser privado ou público), ex: `meu-controle`.
-3. Faça upload dos 5 arquivos deste pacote para a raiz do repositório (botão "Add file" → "Upload files").
-4. Vá em **Settings → Pages**.
-5. Em "Source", selecione a branch `main` e a pasta `/root`, e salve.
-6. Em ~1 minuto seu app estará em `https://SEUUSUARIO.github.io/meu-controle/`.
-7. Abra esse link no celular → menu do navegador → **"Adicionar à tela de início"**.
+Um único serviço Node.js/Express serve **tudo**: a interface (HTML) e a API. Não há front-end e back-end separados.
 
-## Opção 2 — Netlify Drop (mais rápido, sem criar repositório)
+```text
+Navegador (PWA)
+      │
+      ▼
+meu-controle-api (Render · Node/Express)
+      │  server.js  → serve index.html + rotas /api/*
+      │  api-sync.js → intercepta localStorage e sincroniza com a API
+      │  db.js       → lê/escreve o estado no Postgres
+      ▼
+Neon PostgreSQL
+      └── tabela public.app_state (estado inteiro do app em JSONB)
+```
 
-1. Acesse **app.netlify.com/drop**.
-2. Arraste a pasta inteira (os 5 arquivos) para a área indicada.
-3. Em segundos você recebe uma URL pública (ex: `nome-aleatorio.netlify.app`).
-4. Crie uma conta gratuita para o link não expirar.
+### Por que só uma tabela?
 
-## Opção 3 — Vercel
-
-1. Acesse **vercel.com**, crie conta gratuita.
-2. "Add New Project" → "Deploy" → arraste a pasta ou conecte um repositório GitHub com esses arquivos.
-3. Você recebe uma URL `seu-projeto.vercel.app`.
+O app inteiro (dívidas, escala, configuração de preenchimento automático) é salvo como um único registro JSONB em `public.app_state`. Isso é proposital: simplifica backup, sincronização e evolução do formato, sem normalizar prematuramente um app pessoal de escopo pequeno.
 
 ---
 
-Qualquer uma das três é gratuita e suficiente para este app (é só HTML/CSS/JS estático, sem servidor).
+## Arquivos principais
+
+| Arquivo | Função |
+|---|---|
+| `index.html` | Interface do app (dívidas + escala) |
+| `server.js` | Servidor Express — serve o HTML e as rotas de API |
+| `db.js` | Conexão com o Neon e leitura/escrita do estado |
+| `api-sync.js` | Faz o `index.html` (que só sabe usar `localStorage`) conversar com a API, sem precisar alterar a interface |
+| `watermark.js` | Marca d'água do mascote no canto da tela |
+| `manifest.json` + `icon-192.png` + `icon-512.png` | Configuração de PWA (instalar na tela de início) |
+| `sw.js` | Service worker para funcionamento offline do "casco" do app |
+| `schema.sql` | Definição da tabela `app_state` (o próprio app também cria a tabela sozinho, se não existir) |
+
+---
+
+## Rodando localmente
+
+```bash
+npm install
+DATABASE_URL="postgresql://usuario:senha@host/neondb?sslmode=require" npm start
+```
+
+O servidor sobe em `http://localhost:3000`.
+
+---
+
+## Variáveis de ambiente
+
+| Variável | Onde configurar | Observação |
+|---|---|---|
+| `DATABASE_URL` | Render → serviço `meu-controle-api` → Environment | Connection string do Neon, **sem aspas**, sem o prefixo `DATABASE_URL=`. Nunca deve existir no front-end nem em nenhum arquivo do repositório. |
+
+---
+
+## Endpoints da API
+
+| Rota | Método | Descrição |
+|---|---|---|
+| `/api/health` | GET | Verifica se o servidor está de pé e conectado ao Neon (`{"ok":true,"database":true}`) |
+| `/api/state` | GET | Retorna o estado salvo (dívidas, escala, configuração) |
+| `/api/state` | PUT | Substitui o estado salvo pelo enviado no corpo da requisição |
+
+---
+
+## Deploy (Render)
+
+Um único Web Service, chamado **`meu-controle-api`**:
+- **Build command:** `npm install`
+- **Start command:** `npm start` (roda `node server.js`)
+- **Environment:** `DATABASE_URL` configurada (ver acima)
+
+> ⚠️ Não é necessário nenhum outro serviço além deste. Um segundo serviço chamado apenas `meu-controle` (sem `-api`) foi criado por engano durante o desenvolvimento e não tem função — deve ser removido caso ainda exista.
+
+---
+
+## Versão legada (descontinuada)
+
+Existiu uma versão anterior hospedada em **GitHub Pages** (`luandev93.github.io/meu-controle/`), que salvava os dados só no `localStorage` do navegador (sem nuvem). Essa versão está **descontinuada** — os dados dela não sincronizam com o app atual. Use sempre o link do Render acima.
+
+---
+
+## Segurança
+
+- `DATABASE_URL` só existe como variável de ambiente no Render (back-end). Nunca deve ser commitada no repositório nem exposta no front-end.
+- Se uma credencial vazar (ex: aparecer em log ou print), rotacione a senha no Neon imediatamente e atualize a variável no Render.
+
+---
+
+## Identidade visual
+
+Mascote: uma "marmota do Go com dinheiro", usada como marca d'água discreta (`watermark.js`) sem alterar o layout original do app.
