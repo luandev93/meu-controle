@@ -22,7 +22,10 @@ body{background:radial-gradient(circle at 50% -10%,rgba(39,64,112,.20),transpare
   .topbar{padding-left:32px;padding-right:32px}.month-nav{padding-left:32px;padding-right:32px}main{padding-left:32px;padding-right:32px}.fab{right:28px}.tabbar{padding-left:24px;padding-right:24px}
 }
 @media (max-width:759px){.app-frame{height:100vh;min-height:100vh;border-left-color:var(--border-soft);border-right-color:var(--border-soft)}}
-.checkbox.checked{background:#5DA27D;border-color:#5DA27D}.summary-card.pend .value{color:#C7A86A}.summary-card.paid .value{color:#6AB58B}.chip.due{color:#C7A86A}.cal-dot.night,.legend-dot.night{background:#728EDB}.cal-dot.day,.legend-dot.day{background:#B28C5A}
+.checkbox.checked{background:#5DA27D;border-color:#5DA27D}.summary-card.pend .value{color:#C7A86A}.summary-card.paid .value{color:#6AB58B}.chip.due{color:#C7A86A}
+/* Diferenciação semântica por forma: HMSM = quadrado, HMMV = círculo. */
+.cal-dot.night,.legend-dot.night{background:#728EDB;border-radius:2px}
+.cal-dot.day,.legend-dot.day{background:#B28C5A;border-radius:50%}
 
 /* Marca d'água: discreta na tela e suficientemente legível no papel. */
 #app-watermark{
@@ -69,15 +72,15 @@ body{background:radial-gradient(circle at 50% -10%,rgba(39,64,112,.20),transpare
   #view-escala .cal-day.empty{border-color:transparent!important}
   #view-escala .cal-day .num{color:#222!important;font-size:12px!important}
   #view-escala .cal-day.today{border:1.5px solid #555!important}.cal-day.today .num{color:#111!important}
-  #view-escala .cal-dot{display:inline-block!important;width:6px!important;height:6px!important;border-radius:50%!important;background:transparent!important;border:1.2px solid #555!important;box-sizing:border-box!important}
-  #view-escala .cal-dot.night{border-color:#333!important;background:#fff!important}
-  #view-escala .cal-dot.day{border-color:#888!important;background:#fff!important}
-  #view-escala .cal-dot.other{border-color:#666!important;background:#fff!important}
+  #view-escala .cal-dot{display:inline-block!important;width:6px!important;height:6px!important;background:#fff!important;box-sizing:border-box!important}
+  #view-escala .cal-dot.night{border:1.2px solid #333!important;border-radius:1px!important}
+  #view-escala .cal-dot.day{border:1.2px solid #888!important;border-radius:50%!important}
+  #view-escala .cal-dot.other{border:1.2px solid #666!important;border-radius:2px!important}
   #view-escala .legend{margin-top:8px!important;padding-top:7px!important;border-top:1px solid #bbb!important}
   #view-escala .legend-item{color:#333!important;font-size:10px!important}
-  #view-escala .legend-dot{background:#fff!important;border:1.2px solid #555!important;box-sizing:border-box}
-  #view-escala .legend-dot.night{border-color:#333!important}
-  #view-escala .legend-dot.day{border-color:#888!important}
+  #view-escala .legend-dot{width:7px!important;height:7px!important;background:#fff!important;box-sizing:border-box}
+  #view-escala .legend-dot.night{border:1.2px solid #333!important;border-radius:1px!important}
+  #view-escala .legend-dot.day{border:1.2px solid #888!important;border-radius:50%!important}
 
   /* Dívidas / Contas */
   #view-dividas .summary-strip{gap:8px!important;margin-bottom:8px!important}
