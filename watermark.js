@@ -6,7 +6,7 @@
     const mark = document.createElement('div');
     mark.id = 'app-watermark';
     mark.setAttribute('aria-hidden', 'true');
-    mark.innerHTML = '<div class="watermark-logo"><span>C</span></div><div class="watermark-text">CONTROLE · PESSOAL</div>';
+    mark.innerHTML = '<img class="watermark-image" src="/icon-512.png" alt="">';
     host.appendChild(mark);
   }
 
