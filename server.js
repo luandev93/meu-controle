@@ -26,18 +26,18 @@ async function sendApp(_req, res) {
   try {
     const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
 
-    // O index possui um typo antigo em um callback de cópia que impede todo o
-    // script inline de ser parseado. Corrigimos na entrega enquanto o arquivo
-    // fonte é saneado, evitando deixar o app indisponível em produção.
+    // Corrige em trânsito o typo legado que impedia o script inline de ser parseado.
+    // A correção também fica protegida contra o cache do PWA, pois o HTML é no-store.
     const repaired = html.replace(
-      "showActionSheet({title:'Copiado!',message:'O backup foi copiado.',actions:[{label:'OK',style:'btn-ghost'}]);",
-      "showActionSheet({title:'Copiado!',message:'O backup foi copiado.',actions:[{label:'OK',style:'btn-ghost'}]});"
+      "actions:[{label:'OK',style:'btn-ghost'}]);",
+      "actions:[{label:'OK',style:'btn-ghost'}]});"
     );
 
     const injected = repaired.replace(
       '</head>',
       '<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png"><link rel="stylesheet" href="/theme.css?v=3"><link rel="stylesheet" href="/watermark.css?v=1"><script src="/api-sync.js"></script><script src="/opening.js?v=1"></script><script src="/watermark.js"></script><script src="/shortcut.js"></script></head>'
     );
+    res.set('Cache-Control', 'no-store, max-age=0');
     res.type('html').send(injected);
   } catch {
     res.status(500).send('Application unavailable');
