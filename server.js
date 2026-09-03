@@ -12,7 +12,7 @@ async function sendApp(_req, res) {
     const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
     const injected = html.replace(
       '</head>',
-      '<script src="/api-sync.js"></script><script src="/watermark.js"></script><script src="/shortcut.js"></script></head>'
+      '<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png"><script src="/api-sync.js"></script><script src="/watermark.js"></script><script src="/shortcut.js"></script></head>'
     );
     res.type('html').send(injected);
   } catch {
