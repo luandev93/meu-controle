@@ -684,7 +684,7 @@
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <h2 id="debt-sheet-title">Nova dívida</h2>
+      <h2 id="debt-sheet-title">Nova conta</h2>
       <button class="sheet-close" data-close="sheet-debt">${'{ICON_X}'}</button>
     </div>
     <div class="field">
@@ -711,7 +711,7 @@
     </div>
     <p id="recurring-hint" style="font-size:11px;color:var(--text-faint);margin:-8px 0 14px 0;display:none;line-height:1.5;">Cria a cobrança nos próximos 5 anos. Quando não precisar mais (ex: saiu do aluguel), exclua uma ocorrência e escolha "excluir todas".</p>
     <div class="divider"></div>
-    <button class="btn btn-primary btn-block" id="f-save">Salvar dívida</button>
+    <button class="btn btn-primary btn-block" id="f-save">Salvar conta</button>
   </div>
 </div>
 
@@ -973,7 +973,7 @@
     document.getElementById('sum-count-label').textContent = total + (total===1?' conta':' contas') + ' · ' + paid + ' paga' + (paid===1?'':'s') + ' · ' + pend + ' pendente' + (pend===1?'':'s');
 
     if(items.length===0){
-      list.innerHTML = '<div class="empty-state">'+ICONS.ICON_WALLET+'<p>Nenhuma dívida cadastrada neste mês.<br>Toque no + para adicionar.</p></div>';
+      list.innerHTML = '<div class="empty-state">'+ICONS.ICON_WALLET+'<p>Nenhuma conta cadastrada neste mês.<br>Toque no + para adicionar.</p></div>';
       return;
     }
 
@@ -1015,7 +1015,7 @@
         const siblings = d.groupId ? state.debts.filter(x=>x.groupId===d.groupId) : [d];
         if(siblings.length > 1){
           showActionSheet({
-            title: d.recurring ? 'Dívida recorrente' : 'Dívida parcelada',
+            title: d.recurring ? 'Conta recorrente' : 'Conta parcelada',
             message: d.recurring
               ? 'Essa conta se repete todo mês. Você pode excluir só esta ocorrência ou todas de uma vez (ex: quando sair do aluguel).'
               : 'Essa conta faz parte de um parcelamento com '+siblings.length+' parcelas.',
@@ -1182,8 +1182,8 @@
 
   document.getElementById('fab-add-debt').addEventListener('click', ()=>{
     editingDebtId = null;
-    document.getElementById('debt-sheet-title').textContent = 'Nova dívida';
-    document.getElementById('f-save').textContent = 'Salvar dívida';
+    document.getElementById('debt-sheet-title').textContent = 'Nova conta';
+    document.getElementById('f-save').textContent = 'Salvar conta';
     document.getElementById('f-desc').value='';
     document.getElementById('f-venc').value = debtMonth.ano+'-'+pad(debtMonth.mes)+'-01';
     document.getElementById('f-valor').value='';
@@ -1201,7 +1201,7 @@
     const d = state.debts.find(x=>x.id===id);
     if(!d) return;
     editingDebtId = id;
-    document.getElementById('debt-sheet-title').textContent = 'Editar dívida';
+    document.getElementById('debt-sheet-title').textContent = 'Editar conta';
     document.getElementById('f-save').textContent = 'Salvar alterações';
     document.getElementById('f-desc').value = d.desc;
     document.getElementById('f-venc').value = d.ano+'-'+pad(d.mes)+'-'+pad(d.dia);
@@ -1565,7 +1565,7 @@
       '<h1>Contas — '+MESES[debtMonth.mes-1]+' '+debtMonth.ano+'</h1>'
       + '<div class="print-sub">Gerado em '+new Date().toLocaleDateString('pt-BR')+'</div>'
       + '<table><thead><tr><th>Descrição</th><th>Vencimento</th><th>Parcela</th><th>Valor</th><th>Status</th></tr></thead><tbody>'
-      + (rows || '<tr><td colspan="5">Nenhuma dívida cadastrada.</td></tr>') + '</tbody></table>';
+      + (rows || '<tr><td colspan="5">Nenhuma conta cadastrada.</td></tr>') + '</tbody></table>';
     setTimeout(()=>window.print(), 60);
   }
 
@@ -1577,7 +1577,7 @@
       const valor = d.valor ? ' — '+money(d.valor) : '';
       lines.push((d.pago?'✅':'🔲')+' '+d.desc+parcela+' · vence '+fmtDDMM(0,d.mes,d.dia)+valor);
     });
-    if(items.length===0) lines.push('Nenhuma dívida cadastrada.');
+    if(items.length===0) lines.push('Nenhuma conta cadastrada.');
     window.open('https://wa.me/?text='+encodeURIComponent(lines.join('\n')), '_blank');
   }
 
