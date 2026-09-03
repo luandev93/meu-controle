@@ -27,7 +27,7 @@ async function sendApp(_req, res) {
     const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
     const injected = html.replace(
       '</head>',
-      '<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png"><link rel="stylesheet" href="/theme.css?v=2"><style>@media print{#view-escala .cal-dot{display:inline-block!important;width:8px!important;height:8px!important;border-radius:50%!important;background:transparent!important;box-sizing:border-box!important}#view-escala .cal-dot.night{border:2px solid #444!important}#view-escala .cal-dot.day{border:2px solid #888!important}}</style><script src="/api-sync.js"></script><script src="/opening.js?v=1"></script><script src="/watermark.js"></script><script src="/shortcut.js"></script></head>'
+      '<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png"><link rel="stylesheet" href="/theme.css?v=2"><script src="/api-sync.js"></script><script src="/opening.js?v=1"></script><script src="/watermark.js"></script><script src="/shortcut.js"></script></head>'
     );
     res.type('html').send(injected);
   } catch {

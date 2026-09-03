@@ -372,11 +372,11 @@
   .cal-day .num{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
   .cal-day.today{border-color:var(--accent);}
   .cal-day.today .num{color:var(--accent);font-weight:600;}
-  .cal-dots{display:flex;gap:3px;height:5px;}
-  .cal-dot{width:5px;height:5px;border-radius:50%;}
-  .cal-dot.night{background:var(--night);}
-  .cal-dot.day{background:var(--day);}
-  .cal-dot.other{background:var(--text-dim);}
+  .cal-dots{display:flex;gap:3px;height:11px;align-items:center;}
+  .cal-dot{width:11px;height:11px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;line-height:1;}
+  .cal-dot.night{color:var(--night);}
+  .cal-dot.day{color:var(--day);}
+  .cal-dot.other{color:var(--text-dim);}
 
   .legend{
     display:flex;
@@ -386,9 +386,9 @@
     border-top:1px solid var(--border-soft);
   }
   .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-dim);}
-  .legend-dot{width:7px;height:7px;border-radius:50%;}
-  .legend-dot.night{background:var(--night);}
-  .legend-dot.day{background:var(--day);}
+  .legend-dot{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;font-size:13px;line-height:1;}
+  .legend-dot.night{color:var(--night);}
+  .legend-dot.day{color:var(--day);}
 
   .toolbar-row{
     display:flex;
@@ -664,8 +664,8 @@
       <div class="cal-weekdays" id="cal-weekdays"></div>
       <div class="cal-grid" id="cal-grid"></div>
       <div class="legend">
-        <div class="legend-item"><span class="legend-dot night"></span>HMSM · Noite</div>
-        <div class="legend-item"><span class="legend-dot day"></span>HMMV · Dia</div>
+        <div class="legend-item"><span class="legend-dot night">&#9827;</span>HMSM · Noite</div>
+        <div class="legend-item"><span class="legend-dot day">&#9788;</span>HMMV · Dia</div>
       </div>
     </main>
   </div>
@@ -1332,7 +1332,8 @@
       const isToday = key===todayKey;
       const dots = shifts.map(s=>{
         const cls = s.local==='HMSM' ? 'night' : (s.local==='HMMV' ? 'day' : 'other');
-        return '<span class="cal-dot '+cls+'"></span>';
+        const glyph = cls==='night' ? '&#9827;' : (cls==='day' ? '&#9788;' : '&#8226;');
+        return '<span class="cal-dot '+cls+'">'+glyph+'</span>';
       }).join('');
       cells += '<div class="cal-day '+(isToday?'today':'')+'" data-date="'+key+'">'
         + '<div class="num">'+d+'</div>'
