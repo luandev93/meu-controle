@@ -36,7 +36,7 @@ async function sendApp(_req, res) {
 
     const injected = repaired.replace(
       '</head>',
-      '<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png"><link rel="stylesheet" href="/theme.css?v=3"><script src="/api-sync.js"></script><script src="/opening.js?v=1"></script><script src="/watermark.js"></script><script src="/shortcut.js"></script></head>'
+      '<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png"><link rel="stylesheet" href="/theme.css?v=3"><link rel="stylesheet" href="/watermark.css?v=1"><script src="/api-sync.js"></script><script src="/opening.js?v=1"></script><script src="/watermark.js"></script><script src="/shortcut.js"></script></head>'
     );
     res.type('html').send(injected);
   } catch {
