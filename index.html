@@ -42,12 +42,14 @@
     --radius-sm:9px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0;padding:0;height:100%;}
   body{
     background:var(--bg);
     color:var(--text);
     font-family:var(--font-sans);
-    min-height:100vh;
+    height:100vh;
+    height:100dvh;
+    overflow:hidden;
     display:flex;
     justify-content:center;
     -webkit-font-smoothing:antialiased;
@@ -55,11 +57,13 @@
   .app-frame{
     width:100%;
     max-width:440px;
-    min-height:100vh;
+    height:100vh;
+    height:100dvh;
     background:var(--bg);
     display:flex;
     flex-direction:column;
     position:relative;
+    overflow:hidden;
     border-left:1px solid var(--border-soft);
     border-right:1px solid var(--border-soft);
   }
@@ -67,6 +71,7 @@
   /* Top bar */
   .topbar{
     padding:20px 20px 0 20px;
+    flex-shrink:0;
   }
   .wordmark{
     font-family:var(--font-mono);
@@ -105,6 +110,7 @@
     align-items:center;
     justify-content:space-between;
     padding:18px 20px 14px 20px;
+    flex-shrink:0;
   }
   .month-nav h1{
     font-size:21px;
@@ -136,11 +142,17 @@
   /* Views */
   main{
     flex:1;
-    padding:0 20px 100px 20px;
+    min-height:0;
+    padding:0 20px 20px 20px;
     overflow-y:auto;
   }
   .view{display:none;}
-  .view.active{display:block;}
+  .view.active{
+    display:flex;
+    flex-direction:column;
+    flex:1;
+    min-height:0;
+  }
 
   /* Summary strip */
   .summary-strip{
@@ -296,8 +308,7 @@
     border-top:1px solid var(--border-soft);
     background:var(--surface);
     padding:8px 12px calc(10px + env(safe-area-inset-bottom)) 12px;
-    position:sticky;
-    bottom:0;
+    flex-shrink:0;
   }
   .tab-btn{
     flex:1;
@@ -403,6 +414,7 @@
 
   #print-area{display:none;}
   @media print{
+    body,.app-frame{height:auto;overflow:visible;}
     body *{visibility:hidden;}
     #print-area, #print-area *{visibility:visible;}
     #print-area{
