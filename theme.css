@@ -17,7 +17,7 @@ body{background:radial-gradient(circle at 50% -10%,rgba(39,64,112,.20),transpare
 .tab-btn.active{color:#7FA1DE}.tab-btn.active::before{background:#6288CB}
 @media (min-width:760px){body{padding:20px;min-height:100vh}.app-frame{max-width:760px;min-height:calc(100vh - 40px);border:1px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.55),0 0 0 1px rgba(77,113,177,.07)}.topbar{padding-left:32px;padding-right:32px}.month-nav{padding-left:32px;padding-right:32px}main{padding-left:32px;padding-right:32px}.fab{right:28px}.tabbar{padding-left:24px;padding-right:24px}}
 @media (max-width:759px){.app-frame{border-left-color:var(--border-soft);border-right-color:var(--border-soft)}}
-.checkbox.checked{background:#5DA27D;border-color:#5DA27D}.summary-card.pend .value{color:#C7A86A}.summary-card.paid .value{color:#6AB58B}.chip.due{color:#C7A86A}.cal-dot.night,.legend-dot.night{color:#728EDB}.cal-dot.day,.legend-dot.day{color:#B28C5A}
+.checkbox.checked{background:#5DA27D;border-color:#5DA27D}.summary-card.pend .value{color:#C7A86A}.summary-card.paid .value{color:#6AB58B}.chip.due{color:#C7A86A}.cal-dot.night,.legend-dot.night{background:#728EDB}.cal-dot.day,.legend-dot.day{background:#B28C5A}
 
 /* Impressão: reproduz a escala visual da tela, usando fundo branco e o mínimo de tinta. */
 @page{size:A4 portrait;margin:10mm}
@@ -41,11 +41,12 @@ body{background:radial-gradient(circle at 50% -10%,rgba(39,64,112,.20),transpare
   #view-escala .cal-day.empty{border-color:transparent!important}
   #view-escala .cal-day .num{color:#222!important;font-size:12px!important}
   #view-escala .cal-day.today{border:1.5px solid #555!important}.cal-day.today .num{color:#111!important}
-  #view-escala .cal-dot{font-size:11px!important}
-  #view-escala .cal-dot.night{color:#333!important}#view-escala .cal-dot.day{color:#555!important}
+  #view-escala .cal-dot{width:8px!important;height:8px!important;box-sizing:border-box!important}
+  #view-escala .cal-dot.night{background:#333!important;border-radius:1px!important}#view-escala .cal-dot.day{background:#777!important;border-radius:50%!important}
   #view-escala .legend{margin-top:8px!important;padding-top:7px!important;border-top:1px solid #bbb!important}
   #view-escala .legend-item{color:#333!important;font-size:10px!important}
-  #view-escala .legend-dot.night{color:#333!important}#view-escala .legend-dot.day{color:#555!important}
+  #view-escala .legend-dot{width:9px!important;height:9px!important;box-sizing:border-box!important}
+  #view-escala .legend-dot.night{background:#333!important;border-radius:1px!important}#view-escala .legend-dot.day{background:#777!important;border-radius:50%!important}
 
   #view-dividas .summary-strip{gap:8px!important;margin-bottom:8px!important}
   #view-dividas .summary-card{background:#fff!important;border:1px solid #bbb!important;border-radius:4px!important;padding:7px 9px!important;box-shadow:none!important}
