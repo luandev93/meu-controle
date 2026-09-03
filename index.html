@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Controle Pessoal — Dívidas & Escala</title>
+<title>Controle Pessoal — Contas & Escala</title>
 <meta name="theme-color" content="#0F1417">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -659,7 +659,7 @@
   </div>
 
   <nav class="tabbar">
-    <button class="tab-btn active" data-tab="dividas">${'{ICON_WALLET}'}<span>Dívidas</span></button>
+    <button class="tab-btn active" data-tab="dividas">${'{ICON_WALLET}'}<span>Contas</span></button>
     <button class="tab-btn" data-tab="escala">${'{ICON_CALENDAR}'}<span>Escala</span></button>
   </nav>
 </div>
@@ -1103,7 +1103,7 @@
   function applyImportedBackup(parsed){
     showActionSheet({
       title:'Importar backup',
-      message:'Isso vai substituir todos os dados atuais (dívidas e escala) pelos dados importados. Deseja continuar?',
+      message:'Isso vai substituir todos os dados atuais (contas e escala) pelos dados importados. Deseja continuar?',
       actions:[
         {label:'Importar e substituir', style:'btn-danger-ghost', onClick:()=>{
           state.debts = Array.isArray(parsed.debts) ? parsed.debts : [];
@@ -1550,7 +1550,7 @@
       return '<tr><td>'+escapeHtml(d.desc)+'</td><td>'+fmtDDMM(0,d.mes,d.dia)+'</td><td>'+parcela+'</td><td>'+valor+'</td><td>'+(d.pago?'Paga':'Pendente')+'</td></tr>';
     }).join('');
     document.getElementById('print-area').innerHTML =
-      '<h1>Dívidas — '+MESES[debtMonth.mes-1]+' '+debtMonth.ano+'</h1>'
+      '<h1>Contas — '+MESES[debtMonth.mes-1]+' '+debtMonth.ano+'</h1>'
       + '<div class="print-sub">Gerado em '+new Date().toLocaleDateString('pt-BR')+'</div>'
       + '<table><thead><tr><th>Descrição</th><th>Vencimento</th><th>Parcela</th><th>Valor</th><th>Status</th></tr></thead><tbody>'
       + (rows || '<tr><td colspan="5">Nenhuma dívida cadastrada.</td></tr>') + '</tbody></table>';
@@ -1559,7 +1559,7 @@
 
   function shareDividas(){
     const items = state.debts.filter(d=>d.ano===debtMonth.ano && d.mes===debtMonth.mes).sort((a,b)=>a.dia-b.dia);
-    const lines = ['*Dívidas — '+MESES[debtMonth.mes-1]+' '+debtMonth.ano+'*',''];
+    const lines = ['*Contas — '+MESES[debtMonth.mes-1]+' '+debtMonth.ano+'*',''];
     items.forEach(d=>{
       const parcela = d.parcTotal ? ' ('+d.parcAtual+'/'+d.parcTotal+')' : '';
       const valor = d.valor ? ' — '+money(d.valor) : '';
