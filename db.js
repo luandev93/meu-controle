@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 
-const connection = process.env.DATABASE_URL;
+const connection = (process.env.DATABASE_URL || '').trim();
 
 export const database = connection ? neon(connection) : null;
 
@@ -9,7 +9,7 @@ let schemaReady;
 async function ensureSchema() {
   if (!database) throw new Error('DATABASE_URL not configured');
   if (!schemaReady) {
-    schemaReady = database(`
+    schemaReady = database.query(`
       create table if not exists public.app_state (
         id integer primary key,
         data jsonb not null default '{}'::jsonb,
@@ -25,7 +25,7 @@ async function ensureSchema() {
 
 export async function readState() {
   await ensureSchema();
-  const rows = await database('select data from public.app_state where id = $1', [1]);
+  const rows = await database.query('select data from public.app_state where id = $1', [1]);
   return rows[0]?.data ?? {
     debts: [],
     shifts: [],
@@ -38,7 +38,7 @@ export async function readState() {
 
 export async function writeState(data) {
   await ensureSchema();
-  await database(
+  await database.query(
     'insert into public.app_state (id, data, updated_at) values ($1, $2::jsonb, now()) on conflict (id) do update set data = excluded.data, updated_at = now()',
     [1, JSON.stringify(data)]
   );

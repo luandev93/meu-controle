@@ -7,12 +7,22 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '1mb' }));
 
+function safeDbError(error) {
+  const code = typeof error?.code === 'string' ? error.code : null;
+  const name = typeof error?.name === 'string' ? error.name : 'Error';
+  let message = typeof error?.message === 'string' ? error.message : String(error || 'Unknown database error');
+  message = message
+    .replace(/postgres(?:ql)?:\/\/[^\s)]+/gi, 'postgres://***')
+    .replace(/(password|passwd|pwd)=([^\s&;]+)/gi, '$1=***');
+  return { name, code, message };
+}
+
 async function sendApp(_req, res) {
   try {
     const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
     const injected = html.replace(
       '</head>',
-      '<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png"><script src="/api-sync.js"></script><script src="/watermark.js"></script><script src="/shortcut.js"></script></head>'
+      '<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png"><link rel="stylesheet" href="/theme.css?v=1"><script src="/api-sync.js"></script><script src="/watermark.js"></script><script src="/shortcut.js"></script></head>'
     );
     res.type('html').send(injected);
   } catch {
@@ -28,16 +38,18 @@ app.get('/api/health', async (_req, res) => {
   try {
     await readState();
     res.json({ ok: true, service: 'meu-controle', database: true });
-  } catch {
-    res.status(503).json({ ok: false, service: 'meu-controle', database: false });
+  } catch (error) {
+    console.error('[db] health check failed', safeDbError(error));
+    res.status(503).json({ ok: false, service: 'meu-controle', database: false, error: safeDbError(error) });
   }
 });
 
 app.get('/api/state', async (_req, res) => {
   try {
     res.json(await readState());
-  } catch {
-    res.status(503).json({ error: 'database_unavailable' });
+  } catch (error) {
+    console.error('[db] state read failed', safeDbError(error));
+    res.status(503).json({ error: 'database_unavailable', detail: safeDbError(error) });
   }
 });
 
@@ -48,8 +60,9 @@ app.put('/api/state', async (req, res) => {
     }
     await writeState(req.body);
     res.json({ ok: true });
-  } catch {
-    res.status(503).json({ error: 'database_unavailable' });
+  } catch (error) {
+    console.error('[db] state write failed', safeDbError(error));
+    res.status(503).json({ error: 'database_unavailable', detail: safeDbError(error) });
   }
 });
 
