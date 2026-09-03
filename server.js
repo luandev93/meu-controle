@@ -1,6 +1,6 @@
 import express from 'express';
 import { readFile } from 'node:fs/promises';
-import { readState, writeState } from './db.js';
+import { readStateRecord, writeState } from './db.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -15,6 +15,11 @@ function safeDbError(error) {
     .replace(/postgres(?:ql)?:\/\/[^\s)]+/gi, 'postgres://***')
     .replace(/(password|passwd|pwd)=([^\s&;]+)/gi, '$1=***');
   return { name, code, message };
+}
+
+function noStore(res, updatedAt) {
+  res.set('Cache-Control', 'no-store, max-age=0');
+  if (updatedAt) res.set('X-State-Updated-At', new Date(updatedAt).toISOString());
 }
 
 async function sendApp(_req, res) {
@@ -36,19 +41,24 @@ app.use(express.static('.'));
 
 app.get('/api/health', async (_req, res) => {
   try {
-    await readState();
+    const record = await readStateRecord();
+    noStore(res, record.updated_at);
     res.json({ ok: true, service: 'meu-controle', database: true });
   } catch (error) {
     console.error('[db] health check failed', safeDbError(error));
+    noStore(res);
     res.status(503).json({ ok: false, service: 'meu-controle', database: false, error: safeDbError(error) });
   }
 });
 
 app.get('/api/state', async (_req, res) => {
   try {
-    res.json(await readState());
+    const record = await readStateRecord();
+    noStore(res, record.updated_at);
+    res.json(record.data);
   } catch (error) {
     console.error('[db] state read failed', safeDbError(error));
+    noStore(res);
     res.status(503).json({ error: 'database_unavailable', detail: safeDbError(error) });
   }
 });
@@ -58,10 +68,12 @@ app.put('/api/state', async (req, res) => {
     if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
       return res.status(400).json({ error: 'invalid_state' });
     }
-    await writeState(req.body);
+    const updatedAt = await writeState(req.body);
+    noStore(res, updatedAt);
     res.json({ ok: true });
   } catch (error) {
     console.error('[db] state write failed', safeDbError(error));
+    noStore(res);
     res.status(503).json({ error: 'database_unavailable', detail: safeDbError(error) });
   }
 });

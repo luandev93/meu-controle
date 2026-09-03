@@ -23,23 +23,38 @@ async function ensureSchema() {
   await schemaReady;
 }
 
-export async function readState() {
+export async function readStateRecord() {
   await ensureSchema();
-  const rows = await database.query('select data from public.app_state where id = $1', [1]);
-  return rows[0]?.data ?? {
-    debts: [],
-    shifts: [],
-    scheduleConfig: {
-      hmsm: { enabled: true, anchor: '', intervalValue: 3, unit: 'dias' },
-      hmmv: { enabled: true, weekdays: [2, 4, 6], firstSunday: true }
-    }
+  const rows = await database.query(
+    'select data, updated_at from public.app_state where id = $1',
+    [1]
+  );
+
+  if (rows[0]) return rows[0];
+
+  return {
+    data: {
+      debts: [],
+      shifts: [],
+      scheduleConfig: {
+        hmsm: { enabled: true, anchor: '', intervalValue: 3, unit: 'dias' },
+        hmmv: { enabled: true, weekdays: [2, 4, 6], firstSunday: true }
+      }
+    },
+    updated_at: new Date().toISOString()
   };
+}
+
+export async function readState() {
+  const record = await readStateRecord();
+  return record.data;
 }
 
 export async function writeState(data) {
   await ensureSchema();
-  await database.query(
-    'insert into public.app_state (id, data, updated_at) values ($1, $2::jsonb, now()) on conflict (id) do update set data = excluded.data, updated_at = now()',
+  const rows = await database.query(
+    'insert into public.app_state (id, data, updated_at) values ($1, $2::jsonb, now()) on conflict (id) do update set data = excluded.data, updated_at = now() returning updated_at',
     [1, JSON.stringify(data)]
   );
+  return rows[0]?.updated_at ?? new Date().toISOString();
 }

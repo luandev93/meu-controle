@@ -5,14 +5,22 @@
   const originalRemoveItem = Storage.prototype.removeItem;
   let cache = null;
   let loaded = false;
+  let dirty = false;
+  let stateVersion = null;
   let pending = Promise.resolve();
 
   function apiState() {
     try {
       const xhr = new XMLHttpRequest();
-      xhr.open('GET', '/api/state', false);
+      xhr.open('GET', `/api/state?fresh=${Date.now()}`, false);
+      xhr.setRequestHeader('Cache-Control', 'no-cache, no-store');
       xhr.send(null);
-      if (xhr.status >= 200 && xhr.status < 300) return JSON.parse(xhr.responseText);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        return {
+          data: JSON.parse(xhr.responseText),
+          updatedAt: xhr.getResponseHeader('X-State-Updated-At') || null
+        };
+      }
     } catch (_) {}
     return null;
   }
@@ -32,13 +40,18 @@
 
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        const response = await fetch('/api/state', {
+        const response = await fetch(`/api/state?fresh=${Date.now()}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
           body,
-          keepalive: !!keepalive
+          keepalive: !!keepalive,
+          cache: 'no-store'
         });
-        if (response.ok) return true;
+        if (response.ok) {
+          stateVersion = response.headers.get('X-State-Updated-At') || stateVersion;
+          dirty = false;
+          return true;
+        }
         lastError = new Error(`HTTP ${response.status}`);
       } catch (error) {
         lastError = error;
@@ -54,16 +67,37 @@
   }
 
   function queuePersist(data) {
+    dirty = true;
     pending = pending
       .catch(() => {})
       .then(() => putState(data, false));
     return pending;
   }
 
-  // O adaptador é carregado no <head>. O GET síncrono garante que o app legado
-  // receba os dados do Neon antes de executar seu próprio código de inicialização.
-  cache = apiState();
-  if (!cache) cache = localState();
+  function refreshFromServer() {
+    if (!loaded || dirty) return;
+    const snapshot = apiState();
+    if (!snapshot) return;
+
+    const serverVersion = snapshot.updatedAt ? Date.parse(snapshot.updatedAt) : 0;
+    const localVersion = stateVersion ? Date.parse(stateVersion) : 0;
+
+    if (serverVersion && localVersion && serverVersion <= localVersion) return;
+    if (!serverVersion && JSON.stringify(snapshot.data) === JSON.stringify(cache)) return;
+
+    cache = snapshot.data;
+    stateVersion = snapshot.updatedAt;
+    originalSetItem.call(window.localStorage, KEY, JSON.stringify(cache));
+    window.location.reload();
+  }
+
+  const initial = apiState();
+  if (initial) {
+    cache = initial.data;
+    stateVersion = initial.updatedAt;
+  } else {
+    cache = localState();
+  }
   loaded = true;
 
   Storage.prototype.getItem = function (key) {
@@ -77,7 +111,6 @@
     if (this === window.localStorage && key === KEY) {
       try {
         cache = JSON.parse(value);
-        // Mantém um fallback local e, em paralelo, persiste no Neon.
         originalSetItem.call(this, key, value);
         queuePersist(cache);
       } catch (error) {
@@ -98,10 +131,14 @@
     return originalRemoveItem.call(this, key);
   };
 
-  // Se o usuário editar e atualizar/fechar imediatamente, tenta concluir a
-  // última gravação mesmo com o ciclo de vida da página terminando.
+  window.addEventListener('focus', refreshFromServer);
+  window.addEventListener('pageshow', refreshFromServer);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') refreshFromServer();
+  });
+
   window.addEventListener('pagehide', () => {
-    if (!cache) return;
+    if (!cache || !dirty) return;
     putState(cache, true);
   });
 })();

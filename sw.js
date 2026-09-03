@@ -1,4 +1,4 @@
-const CACHE_NAME = 'controle-v3';
+const CACHE_NAME = 'controle-v4';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -17,14 +17,19 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Network-first: sempre tenta buscar a versão mais nova primeiro.
-// Só usa o cache (modo offline) se a rede falhar.
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // API é sempre autoridade do servidor; nunca colocar /api/* no cache do PWA.
+  if (url.pathname.startsWith('/api/')) return;
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        if (event.request.method === 'GET' && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
         return response;
       })
       .catch(() => caches.match(event.request))
