@@ -1,11 +1,80 @@
 import express from 'express';
 import { readFile } from 'node:fs/promises';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { readStateRecord, writeState } from './db.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
+const APP_PASSWORD = process.env.APP_PASSWORD || '';
 
 app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: false }));
+
+const AUTH_COOKIE = 'mc_auth';
+const PUBLIC_PATHS = new Set(['/login', '/icon-512.png', '/icon-192.png', '/favicon.png']);
+
+function parseCookies(header) {
+  const out = {};
+  if (!header) return out;
+  header.split(';').forEach((pair) => {
+    const idx = pair.indexOf('=');
+    if (idx === -1) return;
+    const key = pair.slice(0, idx).trim();
+    const value = pair.slice(idx + 1).trim();
+    if (key) out[key] = decodeURIComponent(value);
+  });
+  return out;
+}
+
+function expectedAuthToken() {
+  return createHmac('sha256', APP_PASSWORD).update('meu-controle-session-v1').digest('hex');
+}
+
+function isAuthed(req) {
+  if (!APP_PASSWORD) return true;
+  const cookies = parseCookies(req.headers.cookie);
+  const token = cookies[AUTH_COOKIE];
+  if (!token) return false;
+  const expected = expectedAuthToken();
+  const a = Buffer.from(token);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+app.use((req, res, next) => {
+  if (PUBLIC_PATHS.has(req.path) || isAuthed(req)) return next();
+  if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'unauthorized' });
+  return res.redirect('/login');
+});
+
+app.get('/login', async (_req, res) => {
+  try {
+    const html = await readFile(new URL('./login.html', import.meta.url), 'utf8');
+    res.type('html').send(html);
+  } catch {
+    res.status(500).send('Login unavailable');
+  }
+});
+
+app.post('/login', (req, res) => {
+  const submitted = typeof req.body?.password === 'string' ? req.body.password : '';
+  const submittedBuf = Buffer.from(submitted);
+  const expectedBuf = Buffer.from(APP_PASSWORD);
+  const ok = APP_PASSWORD && submittedBuf.length === expectedBuf.length && timingSafeEqual(submittedBuf, expectedBuf);
+  if (!ok) return res.redirect('/login?erro=1');
+  res.cookie(AUTH_COOKIE, expectedAuthToken(), {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    maxAge: 180 * 24 * 60 * 60 * 1000
+  });
+  res.redirect('/');
+});
+
+app.get('/logout', (_req, res) => {
+  res.clearCookie(AUTH_COOKIE);
+  res.redirect('/login');
+});
 
 function safeDbError(error) {
   const code = typeof error?.code === 'string' ? error.code : null;
