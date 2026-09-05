@@ -725,6 +725,9 @@
     </div>
     <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin:0 0 18px 0;">Seus dados ficam salvos só neste navegador/endereço. Para levá-los a outro lugar, use uma das opções abaixo.</p>
 
+    <button class="btn btn-ghost btn-block" id="install-app-btn" style="display:none;">Instalar app na tela inicial</button>
+    <div style="height:10px;display:none;" id="install-app-spacer"></div>
+
     <button class="btn btn-primary btn-block" id="data-export">${'{ICON_BACKUP}'} Exportar arquivo (.json)</button>
     <div style="height:10px;"></div>
     <label class="btn btn-ghost btn-block" style="cursor:pointer;" id="data-import-label">
@@ -1642,6 +1645,33 @@
       navigator.serviceWorker.register('sw.js').catch(()=>{});
     });
   }
+
+  let deferredInstallPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e)=>{
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    const btn = document.getElementById('install-app-btn');
+    const spacer = document.getElementById('install-app-spacer');
+    if(btn) btn.style.display = '';
+    if(spacer) spacer.style.display = '';
+  });
+  document.getElementById('install-app-btn')?.addEventListener('click', async ()=>{
+    if(!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    const btn = document.getElementById('install-app-btn');
+    const spacer = document.getElementById('install-app-spacer');
+    if(btn) btn.style.display = 'none';
+    if(spacer) spacer.style.display = 'none';
+  });
+  window.addEventListener('appinstalled', ()=>{
+    deferredInstallPrompt = null;
+    const btn = document.getElementById('install-app-btn');
+    const spacer = document.getElementById('install-app-spacer');
+    if(btn) btn.style.display = 'none';
+    if(spacer) spacer.style.display = 'none';
+  });
 })();
 </script>
 </body>
