@@ -86,6 +86,8 @@
   .wordmark .dot{color:var(--accent);}
   #open-data svg{width:18px;height:18px;}
   #open-data:active{opacity:0.6;}
+  .wordmark a svg{width:17px;height:17px;}
+  .wordmark a:active{opacity:0.6;}
   .tick-rule{
     height:8px;
     margin-top:10px;
@@ -601,7 +603,7 @@
 
 <div class="app-frame">
   <div class="topbar">
-    <div class="wordmark"><span>Controle<span class="dot"> · </span>Pessoal</span><span style="display:flex;align-items:center;gap:10px;"><span id="today-tag"></span><button id="open-data" style="background:none;border:none;color:var(--text-faint);cursor:pointer;padding:0;display:flex;align-items:center;" title="Backup / Restaurar dados">${'{ICON_BACKUP}'}</button></span></div>
+    <div class="wordmark"><span>Controle<span class="dot"> · </span>Pessoal</span><span style="display:flex;align-items:center;gap:10px;"><span id="today-tag"></span><button id="open-data" style="background:none;border:none;color:var(--text-faint);cursor:pointer;padding:0;display:flex;align-items:center;" title="Backup / Restaurar dados">${'{ICON_BACKUP}'}</button><a href="/logout" style="color:var(--text-faint);cursor:pointer;padding:0;display:flex;align-items:center;" title="Sair / bloquear acesso">${'{ICON_LOCK}'}</a></span></span></div>
     <div class="tick-rule"></div>
   </div>
 
@@ -857,7 +859,8 @@
     ICON_WAND:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2M15 10v-2M10.5 6.5h-2M18.5 6.5h2M5 21l9-9M17.5 3.5l3 3M3 17l1.5 1.5"/></svg>',
     ICON_PRINT:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M6 14h12v7H6z"/></svg>',
     ICON_SHARE:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg>',
-    ICON_BACKUP:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h5"/><path d="M20 20v-5h-5"/><path d="M4.5 15a8 8 0 0 0 14.1 2.5M19.5 9a8 8 0 0 0-14.1-2.5"/></svg>'
+    ICON_BACKUP:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h5"/><path d="M20 20v-5h-5"/><path d="M4.5 15a8 8 0 0 0 14.1 2.5M19.5 9a8 8 0 0 0-14.1-2.5"/></svg>',
+    ICON_LOCK:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
   };
   document.body.innerHTML = document.body.innerHTML.replace(/\$\{'\{(\w+)\}'\}/g, (m,k)=>ICONS[k]||'');
 

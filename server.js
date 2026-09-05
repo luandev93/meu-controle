@@ -11,6 +11,7 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false }));
 
 const AUTH_COOKIE = 'mc_auth';
+const SESSION_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 const PUBLIC_PATHS = new Set(['/login', '/icon-512.png', '/icon-192.png', '/favicon.png']);
 
 function parseCookies(header) {
@@ -66,7 +67,7 @@ app.post('/login', (req, res) => {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',
-    maxAge: 180 * 24 * 60 * 60 * 1000
+    maxAge: SESSION_MAX_AGE_MS
   });
   res.redirect('/');
 });
